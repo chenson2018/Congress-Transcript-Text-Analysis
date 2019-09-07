@@ -1,0 +1,144 @@
+---
+title: "Congress PCA"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+```
+
+```{r}
+politicians = read.csv("politicians_trigram.csv", header = TRUE, row.names = 1)
+trigrams = read.csv("politician_trigrams_count.csv", header = TRUE, row.names = 1)
+```
+
+```{r}
+trigrams = trigrams + .001
+
+N = nrow(trigrams)
+D = ncol(trigrams)
+
+# TF weights
+TF_mat = trigrams/rowSums(trigrams)
+# IDF weights
+IDF_vec = log(1 + N/colSums(trigrams > 0))
+# TF-IDF weights:
+# use sweep to multiply the columns (margin = 2) by the IDF weights
+TFIDF_mat = sweep(TF_mat, MARGIN=2, STATS=IDF_vec, FUN="*")
+```
+
+```{r}
+# PCA on the TF-IDF weights
+pca = prcomp(TFIDF_mat, scale=TRUE)
+pve = summary(pca)$importance[3,]
+plot(pve)  # not much of an elbow
+```
+
+```{r}
+loadings = pca$rotation
+scores = pca$x
+```
+
+```{r}
+qplot(scores[,1], scores[,2], xlab='Component 1', ylab='Component 2')
+```
+
+```{r}
+PCA = data.frame(scores)
+```
+
+```{r}
+ggplot(PCA, aes(x = PC1)) + geom_histogram(binwidth = .25)
+```
+
+```{r}
+pol_PCA = cbind(politicians, PCA)
+```
+
+```{r}
+head(names(pol_PCA))
+```
+
+```{r}
+ggplot(data = pol_PCA, aes(x = date, y = PC1, group = congressman)) + 
+  geom_line() +
+  ylim(-25, 25)
+```
+
+```{r}
+fit = kmeans(scale(cbind(PCA$PC1, PCA$PC2)), 2)
+
+cluster = data.frame(politicians, fit$cluster, PCA)
+#names(cluster) = c("year", "politician", "cluster", "PCA1", "PCA2")
+```
+
+```{r}
+head(names(cluster))
+```
+
+```{r}
+ggplot(data = cluster, aes(x = PC1, y = PC2, color = factor(fit.cluster))) + geom_point()
+``` 
+
+```{r}
+ggplot(data = cluster, aes(x = date, y = PC1, group = congressman, color = factor(fit.cluster))) +
+#  scale_color_manual(values = c("blue", "red")) +
+  geom_line() +
+  ylim(-20, 25)
+```
+
+```{r}
+cluster[cluster$fit.cluster == 2,]
+```
+
+```{r}
+o1 = order(loadings[,1], decreasing=TRUE)
+colnames(trigrams)[head(o1,100)]
+```
+
+```{r}
+colnames(trigrams)[tail(o1,100)]
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
