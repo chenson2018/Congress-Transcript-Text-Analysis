@@ -1,6 +1,6 @@
 ---
 title: "Congress PCA"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
@@ -43,6 +43,8 @@ loadings = pca$rotation
 scores = pca$x
 ```
 
+We'll look at just PC1 versus PC2 as an example of trends in our dataset.
+
 ```{r}
 qplot(scores[,1], scores[,2], xlab='Component 1', ylab='Component 2')
 ```
@@ -70,7 +72,7 @@ ggplot(data = pol_PCA, aes(x = date, y = PC1, group = congressman)) +
 ```
 
 ```{r}
-fit = kmeans(scale(cbind(PCA$PC1, PCA$PC2)), 2)
+fit = kmeans(scale(cbind(PCA$PC1, PCA$PC2)), 4)
 
 cluster = data.frame(politicians, fit$cluster, PCA)
 #names(cluster) = c("year", "politician", "cluster", "PCA1", "PCA2")
@@ -92,17 +94,10 @@ ggplot(data = cluster, aes(x = date, y = PC1, group = congressman, color = facto
 ```
 
 ```{r}
-cluster[cluster$fit.cluster == 2,]
-```
-
-```{r}
 o1 = order(loadings[,1], decreasing=TRUE)
 colnames(trigrams)[head(o1,100)]
 ```
 
-```{r}
-colnames(trigrams)[tail(o1,100)]
-```
 
 
 
